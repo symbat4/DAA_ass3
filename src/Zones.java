@@ -20,7 +20,51 @@ public class Zones {
      */
     public static int[] kosaraju(Input.Slides s) {
         // TODO
-        return new int[s.n()];
+        int n = s.n();
+        int[][] out = Graphs.slidesFrom(s);
+        int[][] in = Graphs.slidesInto(s);
+        boolean[] seen = new boolean[n];
+        int[] order = new int[n];
+        int cnt = 0;
+        int[] stack = new int[n];
+        int[] next = new int[n];
+
+        for (int r = 0; r < n; r++) {
+            if (seen[r]) continue;
+            int top = 0;
+            stack[top++] = r;
+            seen[r] = true;
+            while (top > 0) {
+                int u = stack[top - 1];
+                if (next[u] < out[u].length) {
+                    int v = s.to()[out[u][next[u]++]];
+                    if (!seen[v]) { seen[v] = true; stack[top++] = v; }
+                } else {
+                    top--;
+                    order[cnt++] = u;
+                }
+            }
+        }
+
+        int[] zone = new int[n];
+        java.util.Arrays.fill(zone, -1);
+        int z = 0;
+        for (int i = n - 1; i >= 0; i--) {
+            int r = order[i];
+            if (zone[r] != -1) continue;
+            int top = 0;
+            stack[top++] = r;
+            zone[r] = z;
+            while (top > 0) {
+                int u = stack[--top];
+                for (int e : in[u]) {
+                    int v = s.from()[e];
+                    if (zone[v] == -1) { zone[v] = z; stack[top++] = v; }
+                }
+            }
+            z++;
+        }
+        return zone;
     }
 
     /**
