@@ -17,6 +17,44 @@ public class Escape {
 
     public static Result escape(Input.Walls w, int[] broken) {
         // TODO
-        return new Result(new int[0], 0, 0);
+        int n = w.cells(), cols = w.cols();
+        int[][] g = Graphs.open(w, broken);
+        int exit = n - 1;
+        boolean[] seen = new boolean[n];
+        int[] parent = new int[n];
+        int[] dir = new int[n];
+        int[] stack = new int[n];
+        int top = 0, visited = 1;
+        stack[top++] = 0;
+        seen[0] = true;
+        parent[0] = -1;
+        while (top > 0 && !seen[exit]) {
+            int c = stack[top - 1];
+            if (dir[c] == 4) { top--; continue; }
+            int d = dir[c]++;
+            int nb;
+            if (d == 0) nb = c >= cols ? c - cols : -1;
+            else if (d == 1) nb = (c % cols != cols - 1) ? c + 1 : -1;
+            else if (d == 2) nb = (c + cols < n) ? c + cols : -1;
+            else nb = (c % cols != 0) ? c - 1 : -1;
+            if (nb < 0 || seen[nb] || !isOpen(g[c], nb)) continue;
+            seen[nb] = true;
+            visited++;
+            parent[nb] = c;
+            stack[top++] = nb;
+        }
+        int len = 0;
+        for (int c = exit; c != -1; c = parent[c]) len++;
+        int[] path = new int[len];
+        int i = len - 1;
+        for (int c = exit; c != -1; c = parent[c]) path[i--] = c;
+        int deadEnds = 0;
+        for (int[] list : g) if (list.length == 1) deadEnds++;
+        return new Result(path, visited, deadEnds);
+    }
+
+    private static boolean isOpen(int[] neighbours, int cell) {
+        for (int x : neighbours) if (x == cell) return true;
+        return false;
     }
 }
