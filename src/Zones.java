@@ -75,6 +75,32 @@ public class Zones {
      */
     public static long[] routes(Input.Slides s, int[] zoneOf, int zoneCount) {
         // TODO
-        return new long[]{0, 0};
+        int m = s.count();
+        int[] start = new int[zoneCount + 1];
+        for (int i = 0; i < m; i++) start[zoneOf[s.from()[i]] + 1]++;
+        for (int z = 0; z < zoneCount; z++) start[z + 1] += start[z];
+        int[] fill = java.util.Arrays.copyOf(start, zoneCount);
+        int[] byZone = new int[m];
+        for (int i = 0; i < m; i++) byZone[fill[zoneOf[s.from()[i]]]++] = i;
+
+        long INF = Long.MAX_VALUE / 4;
+        long[] dist = new long[zoneCount];
+        java.util.Arrays.fill(dist, INF);
+        int[] stages = new int[zoneCount];
+        java.util.Arrays.fill(stages, 1);
+        dist[zoneOf[0]] = 0;
+
+        for (int z = 0; z < zoneCount; z++) {
+            for (int j = start[z]; j < start[z + 1]; j++) {
+                int i = byZone[j];
+                int y = zoneOf[s.to()[i]];
+                if (y == z) continue;
+                if (dist[z] < INF) dist[y] = Math.min(dist[y], dist[z] + s.time()[i]);
+                stages[y] = Math.max(stages[y], stages[z] + 1);
+            }
+        }
+        long longest = 0;
+        for (int x : stages) longest = Math.max(longest, x);
+        return new long[]{longest, dist[zoneOf[s.n() - 1]]};
     }
 }
